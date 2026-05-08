@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: aegis-spoke
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/aegis-pi/aegis-pi-gitops.git
+        revision: main
+        files:
+          - path: envs/*/values.yaml
+  template:
+    metadata:
+      name: 'aegis-spoke-{{factory.id}}'
+      labels:
+        aegis.factory/id: '{{factory.id}}'
+    spec:
+      project: default
+      destination:
+        name: '{{factory.id}}'
+        namespace: aegis-spoke-system
+      sources:
+        - repoURL: https://github.com/aegis-pi/aegis-pi-gitops.git
+          targetRevision: main
+          path: charts/aegis-spoke
+          helm:
+            releaseName: aegis-spoke
+            valueFiles:
+              - $values/envs/{{factory.id}}/values.yaml
+        - repoURL: https://github.com/aegis-pi/aegis-pi-gitops.git
+          targetRevision: main
+          ref: values
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
