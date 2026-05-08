@@ -1,0 +1,28 @@
+{{- if .Values.smokeApp.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.smokeApp.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "aegis-spoke.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.smokeApp.replicas }}
+  selector:
+    matchLabels:
+      {{- include "aegis-spoke.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "aegis-spoke.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Values.smokeApp.name }}
+          image: "{{ .Values.smokeApp.image.repository }}:{{ .Values.smokeApp.image.tag }}"
+          imagePullPolicy: {{ .Values.smokeApp.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.smokeApp.containerPort }}
+          resources:
+            {{- toYaml .Values.smokeApp.resources | nindent 12 }}
+{{- end }}

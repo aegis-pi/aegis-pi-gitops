@@ -1,0 +1,17 @@
+{{- if .Values.smokeApp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.smokeApp.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "aegis-spoke.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.smokeApp.service.type }}
+  selector:
+    {{- include "aegis-spoke.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.smokeApp.service.port }}
+      targetPort: http
+{{- end }}

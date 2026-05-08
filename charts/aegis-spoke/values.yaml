@@ -1,0 +1,31 @@
+factory:
+  id: factory-a
+  environmentType: physical-rpi
+  inputModuleType: sensor
+  syncProfile: production-manual
+  display: true
+  riskEnabled: true
+
+namespace:
+  create: true
+  name: aegis-spoke-system
+
+smokeApp:
+  enabled: true
+  name: aegis-spoke-smoke
+  replicas: 1
+  image:
+    repository: nginxinc/nginx-unprivileged
+    tag: stable-alpine
+    pullPolicy: IfNotPresent
+  containerPort: 8080
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
