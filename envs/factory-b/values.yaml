@@ -1,0 +1,13 @@
+factory:
+  id: factory-b
+  environmentType: vm-mac
+  inputModuleType: dummy
+  syncProfile: test-auto
+  display: true
+  riskEnabled: true
+
+namespace:
+  name: aegis-spoke-system
+
+smokeApp:
+  replicas: 1

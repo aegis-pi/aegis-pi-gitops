@@ -1,0 +1,13 @@
+factory:
+  id: factory-a
+  environmentType: physical-rpi
+  inputModuleType: sensor
+  syncProfile: production-manual
+  display: true
+  riskEnabled: true
+
+namespace:
+  name: aegis-spoke-system
+
+smokeApp:
+  replicas: 1
