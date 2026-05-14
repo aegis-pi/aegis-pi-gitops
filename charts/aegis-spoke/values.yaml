@@ -10,6 +10,8 @@ namespace:
   create: true
   name: aegis-spoke-system
 
+imagePullSecrets: []
+
 smokeApp:
   enabled: true
   name: aegis-spoke-smoke

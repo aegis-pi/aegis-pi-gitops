@@ -28,6 +28,12 @@ jobs:
       - name: Helm lint factory-a
         run: helm lint charts/aegis-spoke -f envs/factory-a/values.yaml
 
+      - name: Helm lint factory-b
+        run: helm lint charts/aegis-spoke -f envs/factory-b/values.yaml
+
+      - name: Helm lint factory-c
+        run: helm lint charts/aegis-spoke -f envs/factory-c/values.yaml
+
       - name: Helm template factory-a
         run: helm template aegis-spoke charts/aegis-spoke -f envs/factory-a/values.yaml > /tmp/factory-a-rendered.yaml
 
@@ -36,6 +42,9 @@ jobs:
 
       - name: Helm template factory-c
         run: helm template aegis-spoke charts/aegis-spoke -f envs/factory-c/values.yaml > /tmp/factory-c-rendered.yaml
+
+      - name: Helm template factory-a with ECR pull secret
+        run: helm template aegis-spoke charts/aegis-spoke -f envs/factory-a/values.yaml --set imagePullSecrets[0].name=ecr-registry > /tmp/factory-a-ecr-secret-rendered.yaml
 
       - name: Validate YAML syntax
         run: |
@@ -55,4 +64,57 @@ jobs:
               with path.open("r", encoding="utf-8") as handle:
                   list(yaml.safe_load_all(handle))
               print(path)
+          PY
+
+      - name: Validate ECR pull secret render
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          rendered = Path("/tmp/factory-a-ecr-secret-rendered.yaml")
+          docs = list(yaml.safe_load_all(rendered.read_text(encoding="utf-8")))
+          deployments = [doc for doc in docs if isinstance(doc, dict) and doc.get("kind") == "Deployment"]
+          if not deployments:
+              raise SystemExit("No Deployment rendered for factory-a")
+
+          pod_spec = deployments[0]["spec"]["template"]["spec"]
+          secrets = pod_spec.get("imagePullSecrets", [])
+          names = {item.get("name") for item in secrets if isinstance(item, dict)}
+          if "ecr-registry" not in names:
+              raise SystemExit("Expected imagePullSecrets entry named ecr-registry")
+
+          print("imagePullSecrets render includes ecr-registry")
+          PY
+
+      - name: Validate GitOps workflow boundary
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          workflow = yaml.safe_load(Path(".github/workflows/validate.yaml").read_text(encoding="utf-8"))
+          forbidden = (
+              "kubectl ",
+              "argocd ",
+              "docker build",
+              "docker push",
+              "aws-actions/configure-aws-credentials",
+              "amazon-ecr-login",
+          )
+          violations = []
+
+          for job_name, job in workflow.get("jobs", {}).items():
+              for step in job.get("steps", []):
+                  if step.get("name") == "Validate GitOps workflow boundary":
+                      continue
+                  text = "\n".join(str(step.get(field, "")) for field in ("uses", "run"))
+                  for pattern in forbidden:
+                      if pattern in text:
+                          violations.append(f"{job_name}/{step.get('name', '<unnamed>')}: {pattern.strip()}")
+
+          if violations:
+              raise SystemExit("Forbidden deploy/build step found:\n" + "\n".join(violations))
+
+          print("workflow stays validation-only")
           PY
