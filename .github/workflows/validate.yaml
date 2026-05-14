@@ -29,13 +29,13 @@ jobs:
         run: helm lint charts/aegis-spoke -f envs/factory-a/values.yaml
 
       - name: Helm template factory-a
-        run: helm template aegis-spoke charts/aegis-spoke -f envs/factory-a/values.yaml
+        run: helm template aegis-spoke charts/aegis-spoke -f envs/factory-a/values.yaml > /tmp/factory-a-rendered.yaml
 
       - name: Helm template factory-b
-        run: helm template aegis-spoke charts/aegis-spoke -f envs/factory-b/values.yaml
+        run: helm template aegis-spoke charts/aegis-spoke -f envs/factory-b/values.yaml > /tmp/factory-b-rendered.yaml
 
       - name: Helm template factory-c
-        run: helm template aegis-spoke charts/aegis-spoke -f envs/factory-c/values.yaml
+        run: helm template aegis-spoke charts/aegis-spoke -f envs/factory-c/values.yaml > /tmp/factory-c-rendered.yaml
 
       - name: Validate YAML syntax
         run: |
@@ -44,9 +44,13 @@ jobs:
           from pathlib import Path
           import yaml
 
-          files = sorted(Path(".").rglob("*.yaml")) + sorted(Path(".").rglob("*.yml"))
+          repo_files = sorted(Path(".").rglob("*.yaml")) + sorted(Path(".").rglob("*.yml"))
+          rendered_files = sorted(Path("/tmp").glob("factory-*-rendered.yaml"))
+          files = repo_files + rendered_files
           for path in files:
               if ".git" in path.parts:
+                  continue
+              if "charts" in path.parts and "templates" in path.parts:
                   continue
               with path.open("r", encoding="utf-8") as handle:
                   list(yaml.safe_load_all(handle))
