@@ -9,5 +9,12 @@ factory:
 namespace:
   name: aegis-spoke-system
 
+imagePullSecrets:
+  - name: ecr-registry
+
 smokeApp:
   replicas: 1
+  image:
+    repository: 611058323802.dkr.ecr.ap-south-1.amazonaws.com/aegis/edge-agent
+    tag: sha-7a3cc07
+    pullPolicy: IfNotPresent
