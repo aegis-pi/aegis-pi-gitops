@@ -16,6 +16,12 @@ smokeApp:
   enabled: true
   name: aegis-spoke-smoke
   replicas: 1
+  progressDeadlineSeconds: 120
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   image:
     repository: nginxinc/nginx-unprivileged
     tag: stable-alpine

@@ -8,6 +8,13 @@ metadata:
     {{- include "aegis-spoke.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.smokeApp.replicas }}
+  progressDeadlineSeconds: {{ .Values.smokeApp.progressDeadlineSeconds }}
+  strategy:
+    type: {{ .Values.smokeApp.strategy.type }}
+    {{- with .Values.smokeApp.strategy.rollingUpdate }}
+    rollingUpdate:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
   selector:
     matchLabels:
       {{- include "aegis-spoke.selectorLabels" . | nindent 6 }}

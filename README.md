@@ -43,6 +43,23 @@ Post-MVP candidate:
   ai-apps Helm migration with factory-a manual sync and prune disabled
 ```
 
+## Sync And Rollback Policy
+
+`factory-a` is treated as a production-style physical Spoke. Its Argo CD
+Application is intentionally conservative:
+
+```text
+sync: manual
+prune: disabled
+self-heal: disabled
+rollback: revert the factory values image tag, then manually sync
+```
+
+The smoke Deployment uses `RollingUpdate` with `maxUnavailable: 0` and
+`maxSurge: 1`. With one replica, a bad image tag should create a new failing
+ReplicaSet while the last healthy Pod stays available. Operators must inspect
+the Argo CD failure and Spoke Pod events before reverting the tag.
+
 ## Image Registry Boundary
 
 Container images for Spoke workloads are stored in AWS ECR, not Docker Hub.
